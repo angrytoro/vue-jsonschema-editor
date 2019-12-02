@@ -33,32 +33,28 @@ Vue.component('json-schema-editor', {
     }
   },
   render (h) {
-    let result = []
-    const renderSchema = function (result, schema) {
+    const renderSchema = function (schema, paddingLeft) {
+      let result = []
       let properties
       if (schema.type === 'object') {
         properties = schema.properties
       } else if (schema.items.type === 'object') {
         properties = schema.items.properties
       }
-      return properties.forEach(property => {
-        result.push(<Item schema={property} parentSchema={schema}></Item>)
+      properties.forEach(property => {
+        result.push(<Item schema={property} parentSchema={schema} paddingLeft={paddingLeft}></Item>)
         if (property.type === 'array') {
           let arrayItems = Object.assign({ name: 'items' }, property.items)
-          result.push(<Item schema={arrayItems} parentSchema={property}></Item>)
+          result.push(<Item schema={arrayItems} parentSchema={property} paddingLeft={paddingLeft + 20}></Item>)
           if (property.items.type === 'object') {
-            renderSchema(result, property)
+            result.push(renderSchema(property, paddingLeft + 40))
           }
         } else if (property.type === 'object') {
-          renderSchema(result, property)
+          result.push(renderSchema(property, paddingLeft + 20))
         }
       })
+      return <div>{result}</div>
     }
-    renderSchema(result, Object.assign({}, this.schema, { properties: this.properties }))
-    return (
-      <div>
-        {result}
-      </div>
-    )
+    return renderSchema(Object.assign({}, this.schema, { properties: this.properties }), 20)
   }
 })

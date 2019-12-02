@@ -1,19 +1,19 @@
 <template>
-  <el-row>
-    <el-col :span="10">
+  <el-row class="row">
+    <el-col :span="10" :style="{'padding-left': paddingLeft + 'px'}">
       <el-row>
         <el-col :span="2">
-          <el-button :icon="foldIcon" @click="handleFoldClick"></el-button>
+          <el-button type="text" size="small" :style="foldVisiable" :icon="foldIcon" @click="handleFoldClick"></el-button>
         </el-col>
         <el-col :span="22">
-          <el-input placeholder="请输入内容" v-model="schema.name">
+          <el-input size="small" placeholder="请输入内容" v-model="schema.name">
             <el-checkbox slot="append" v-model="checked" @change="handleRequiredChange"></el-checkbox>
           </el-input>
         </el-col>
       </el-row>
     </el-col>
     <el-col :span="4">
-      <el-select v-model="schema.type" placeholder="请选择">
+      <el-select size="small" v-model="schema.type" placeholder="请选择">
         <el-option
           v-for="item in typeOptions"
           :key="item.value"
@@ -23,7 +23,7 @@
       </el-select>
     </el-col>
     <el-col :span="4">
-      <el-select v-model="schema.ui" placeholder="请选择">
+      <el-select size="small" v-model="schema.ui" placeholder="请选择">
         <el-option
           v-for="item in uiComOptions"
           :key="item.value"
@@ -32,24 +32,24 @@
         </el-option>
       </el-select>
     </el-col>
-    <el-col :span="3">
-      <el-input placeholder="description" v-model="schema.description">
-        <template slot="append"><el-button type="info" icon="el-icon-edit"></el-button></template>
+    <el-col :span="4">
+      <el-input size="small" placeholder="description" v-model="schema.description">
+        <template slot="append"><el-button type="info" size="small" icon="el-icon-edit"></el-button></template>
       </el-input>
     </el-col>
-    <el-col :span="3">
-      <el-tooltip effect="dark" content="高级设置" placement="top-start">
-        <el-button icon="el-icon-setting"></el-button>
+    <el-col :span="2">
+      <el-tooltip effect="dark" content="高级设置" placement="top-start" :open-delay="400">
+        <el-button size="small" type="text" icon="el-icon-setting"></el-button>
       </el-tooltip>
-      <el-tooltip effect="dark" content="删除节点" placement="top-start">
-        <el-button icon="el-icon-delete"></el-button>
+      <el-tooltip effect="dark" content="删除节点" placement="top-start" :open-delay="400">
+        <el-button size="small" type="text" icon="el-icon-delete"></el-button>
       </el-tooltip>
-      <el-tooltip v-if="plusType !== 1" effect="dark" :content="plusContent" placement="top-start">
-        <el-button icon="el-icon-plus"></el-button>
+      <el-tooltip v-if="plusType !== 1" effect="dark" :content="plusContent" placement="top-start" :open-delay="400">
+        <el-button size="small" type="text" icon="el-icon-plus"></el-button>
       </el-tooltip>
       <el-dropdown v-else @command="handleCommand">
-        <el-tooltip effect="dark" :content="plusContent" placement="top-start">
-          <el-button icon="el-icon-plus"></el-button>
+        <el-tooltip effect="dark" :content="plusContent" placement="top-start" :open-delay="400">
+          <el-button size="small" type="text" icon="el-icon-plus"></el-button>
         </el-tooltip>
         <el-dropdown-menu slot="dropdown">
           <el-dropdown-item :command="0">兄弟节点</el-dropdown-item>
@@ -71,6 +71,12 @@ export default {
     },
     parentSchema: {
       type: Object
+    },
+    paddingLeft: {
+      type: Number,
+      default () {
+        return 0
+      }
     }
   },
   data () {
@@ -82,6 +88,10 @@ export default {
   computed: {
     foldIcon () {
       return this.unfold ? 'el-icon-caret-bottom' : 'el-icon-caret-right'
+    },
+    foldVisiable () {
+      let visibility = this.schema.type === 'object' ? 'visible' : 'hidden'
+      return { visibility }
     },
     parentType () {
       return this.parentSchema.type
@@ -179,3 +189,9 @@ export default {
   }
 }
 </script>
+
+<style lang="less" scoped>
+  .row {
+    margin-bottom: 8px
+  }
+</style>
