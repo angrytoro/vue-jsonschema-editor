@@ -1,49 +1,52 @@
 <template>
   <div id="app">
     <img alt="Vue logo" src="./assets/logo.png">
-    <json-schema-editor :schema="schema" :style="{width: '1474px'}"></json-schema-editor>
+    <Editor :schema="schema" :style="{width: '1474px'}"></Editor>
     <!-- <HelloWorld msg="Welcome to Your Vue.js App"/> -->
   </div>
 </template>
 
 <script>
-// import HelloWorld from './components/HelloWorld.vue'
+import Editor from './components/Editor.vue'
 
 export default {
   name: 'app',
+  components: {
+    Editor
+  },
   data () {
     return {
       schema: {
         'type': 'object',
         'properties': {
-          'field_2': {
+          'field_1': {
             'type': 'string',
             'mock': {
               'mock': '@string'
             }
           },
-          'field_3': {
+          'field_2': {
             'type': 'array',
             'items': {
               'type': 'object',
               'properties': {
-                'field_4': {
+                'field_3': {
                   'type': 'string'
                 },
-                'field_2': {
+                'field_4': {
                   'type': 'object',
                   'properties': {}
                 }
               },
               'required': [
-                'field_4',
-                'field_2'
+                'field_3',
+                'field_4'
               ],
               'description': 'haha'
             },
             'description': '我擦'
           },
-          'field_1': {
+          'field_5': {
             'type': 'array',
             'items': {
               'type': 'string'
@@ -51,9 +54,9 @@ export default {
           }
         },
         'required': [
+          'field_1',
           'field_2',
-          'field_3',
-          'field_1'
+          'field_5'
         ]
       }
     }
