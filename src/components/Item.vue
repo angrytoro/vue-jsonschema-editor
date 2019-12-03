@@ -1,9 +1,9 @@
 <template>
-  <el-row class="row">
-    <el-col :span="10" :style="{'padding-left': paddingLeft + 'px'}">
+  <el-row class="row" :data-level="level">
+    <el-col :span="10" :style="{'padding-left': level * 10 + 'px'}">
       <el-row>
         <el-col :span="2">
-          <el-button type="text" size="small" :style="foldVisiable" :icon="foldIcon" @click="handleFoldClick"></el-button>
+          <el-button type="text" size="small" :style="foldVisiable" :icon="foldIcon" @click="handleFoldClick(level)"></el-button>
         </el-col>
         <el-col :span="22">
           <el-input size="small" placeholder="请输入内容" v-model="schema.name">
@@ -72,10 +72,10 @@ export default {
     parentSchema: {
       type: Object
     },
-    paddingLeft: {
+    level: {
       type: Number,
       default () {
-        return 0
+        return 1
       }
     }
   },
@@ -177,7 +177,24 @@ export default {
     }
   },
   methods: {
-    handleFoldClick () {},
+    handleFoldClick (level) {
+      this.unfold = !this.unfold
+      let start = false
+      let brothers = this.$el.parentElement.children
+      for (let len = brothers.length, i = 0; i < len; i++) {
+        if (brothers[i] === this.$el) {
+          start = true
+          continue
+        }
+        if (start) {
+          if (brothers[i].dataset.level > level) {
+            brothers[i].style.display = this.unfold ? 'block' : 'none'
+          } else {
+            return
+          }
+        }
+      }
+    },
     handleRequiredChange (value) {
       console.log(value)
     },

@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <img alt="Vue logo" src="./assets/logo.png">
-    <json-schema-editor :schema="schema"></json-schema-editor>
+    <json-schema-editor :schema="schema" :style="{width: '1474px'}"></json-schema-editor>
     <!-- <HelloWorld msg="Welcome to Your Vue.js App"/> -->
   </div>
 </template>
