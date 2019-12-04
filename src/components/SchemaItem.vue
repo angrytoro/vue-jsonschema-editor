@@ -8,7 +8,7 @@
           </el-col>
           <el-col v-if="schema.name" :span="22">
             <el-input size="small" placeholder="请输入内容" v-model="schema.name">
-              <el-checkbox slot="append" v-model="checked" @change="handleRequiredChange"></el-checkbox>
+              <el-checkbox slot="append" :value="checked" @change="handleRequiredChange"></el-checkbox>
             </el-input>
           </el-col>
           <el-col v-else :span="22">
@@ -19,7 +19,7 @@
         </el-row>
       </el-col>
       <el-col :span="4">
-        <el-select size="small" v-model="schema.type" placeholder="请选择">
+        <el-select size="small" v-model="schema.type" placeholder="请选择" @change="handleTypeChange">
           <el-option
             v-for="item in typeOptions"
             :key="item.value"
@@ -50,11 +50,11 @@
         <el-tooltip v-if="showDelete" effect="dark" content="删除节点" placement="top-start" :open-delay="400">
           <el-button size="small" type="text" icon="el-icon-delete" @click="handleDelete"></el-button>
         </el-tooltip>
-        <el-tooltip v-if="plusType === 0 || plusType === 3" effect="dark" :content="plusContent" placement="top-start" :open-delay="400">
+        <el-tooltip v-if="plusType === 0 || plusType === 3" effect="dark" :content="plusTip" placement="top-start" :open-delay="400">
           <el-button size="small" type="text" icon="el-icon-plus" @click="handleAddNode(plusType)"></el-button>
         </el-tooltip>
         <el-dropdown v-if="plusType === 1" @command="handleCommand" :style="{'margin-left': '10px'}">
-          <el-tooltip effect="dark" :content="plusContent" placement="top-start" :open-delay="400">
+          <el-tooltip effect="dark" :content="plusTip" placement="top-start" :open-delay="400">
             <el-button size="small" type="text" icon="el-icon-plus"></el-button>
           </el-tooltip>
           <el-dropdown-menu slot="dropdown">
@@ -65,7 +65,7 @@
       </el-col>
     </el-row>
     <div class="child" v-if="schema.type === 'object'">
-      <Schema-Item v-for="item in schema.properties" :key="item.name" :schema="item" :parent-schema="schema" :level="level + 1"></Schema-Item>
+      <Schema-Item v-for="(item, index) in schema.properties" :key="item.name" :index="index" :schema="item" :parent-schema="schema" :level="level + 1"></Schema-Item>
     </div>
     <div class="child" v-if="schema.type === 'array'">
       <Schema-Item :schema="schema.items" :parent-schema="schema" :level="level + 1" :show-delete="false"></Schema-Item>
@@ -74,25 +74,7 @@
 </template>
 
 <script>
-const PLUS_TYPE = Object.freeze({
-  CHILD: 0,
-  BOTH: 1,
-  NONE: 2,
-  BROTHER: 3
-})
-const generateFieldName = function (brothers) {
-  let fieldNames = brothers.map(brother => {
-    return brother.name
-  })
-  let i = 1
-  while (true) {
-    let name = `field_${i}`
-    if (fieldNames.indexOf(name) < 0) {
-      return name
-    }
-    i++
-  }
-}
+import { SCHEMA_TYPE, PLUS_TYPE, getDefaultConfig, generateFieldName } from './utils'
 export default {
   name: 'Schema-Item',
   props: {
@@ -100,6 +82,12 @@ export default {
       type: Boolean,
       default () {
         return false
+      }
+    },
+    index: {
+      type: Number,
+      default () {
+        return 0
       }
     },
     showDelete: {
@@ -126,8 +114,7 @@ export default {
   },
   data () {
     return {
-      unfold: true,
-      checked: true
+      unfold: true
     }
   },
   computed: {
@@ -138,10 +125,16 @@ export default {
       let visibility = this.schema.type === 'object' ? 'visible' : 'hidden'
       return { visibility }
     },
-    parentType () {
-      return this.parentSchema.type
+    /**
+     * 字段是否是必须
+     */
+    checked () {
+      return this.parentSchema.required && this.parentSchema.required.indexOf(this.schema.name) > -1
     },
-    plusContent () {
+    /**
+     * 新增按钮的提示
+     */
+    plusTip () {
       switch (this.plusType) {
         case PLUS_TYPE.CHILD:
           return '新增子节点'
@@ -155,13 +148,15 @@ export default {
      * 新增按钮类型，分为：新增子节点，新增兄弟节点，或者两者
      */
     plusType () {
-      if ((this.schema.type === 'object' && this.parentType === 'array') || this.root) {
+      const parentType = this.parentSchema.type
+      const type = this.schema.type
+      if ((type === SCHEMA_TYPE.OBJECT && parentType === SCHEMA_TYPE.ARRAY) || this.root) {
         return PLUS_TYPE.CHILD // 新增子节点
       }
-      if (this.schema.type === 'object' && this.parentType === 'object') {
+      if (type === SCHEMA_TYPE.OBJECT && parentType === SCHEMA_TYPE.OBJECT) {
         return PLUS_TYPE.BOTH // 新增子节点或者新增兄弟节点
       }
-      if (this.parentType === 'array') {
+      if (parentType === SCHEMA_TYPE.ARRAY) {
         return PLUS_TYPE.NONE // 没有新增功能
       }
       return PLUS_TYPE.BROTHER // 新增兄弟节点
@@ -222,13 +217,60 @@ export default {
     }
   },
   methods: {
+    /**
+     * 处理类型转换
+     */
+    handleTypeChange (type) {
+      if (this.schema.name) {
+        let newConfig = getDefaultConfig(type, this.schema)
+        this.parentSchema.properties.splice(this.index, 1, newConfig)
+      } else if (!this.root) {
+        let newConfig
+        if (type === SCHEMA_TYPE.OBJECT) {
+          newConfig = {
+            type,
+            properties: []
+          }
+        } else if (type === SCHEMA_TYPE.ARRAY) {
+          newConfig = {
+            type,
+            items: {
+              type: SCHEMA_TYPE.STRING
+            }
+          }
+        } else {
+          newConfig = {
+            type
+          }
+        }
+        if (this.schema.description) {
+          newConfig.description = this.schema.description
+        }
+        this.parentSchema.items = newConfig
+      }
+    },
+    /**
+     * 处理展开折叠
+     */
     handleFoldClick () {
       this.unfold = !this.unfold
       this.$el.parentElement.querySelector('.child').style.display = this.unfold ? 'block' : 'none'
     },
-    handleRequiredChange (value) {
-      console.log(value)
+    /**
+     * 处理required点击
+     */
+    handleRequiredChange (checked) {
+      if (checked) {
+        this.parentSchema.required.push(this.schema)
+      } else {
+        this.parentSchema.required = this.parentSchema.required.filter(name => {
+          return name !== this.schema.name
+        })
+      }
     },
+    /**
+     * 新增子节点或者兄弟节点
+     */
     handleCommand (command) {
       this.handleAddNode(command)
     },
