@@ -1,12 +1,24 @@
 <template>
   <div>
     <SchemaItem :schema="diySchema" :parent-schema="{}" :level="0" :root="true" :show-delete="false"></SchemaItem>
+    <el-dialog
+      title="高级设置"
+      :visible.sync="dialogVisible"
+      class="dialog-form">
+      <component :is="currentView" :schema="currentSchema"></component>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="dialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="handleConfirm">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import _ from 'lodash'
 import SchemaItem from './SchemaItem'
+import { eventBus } from './utils'
+import seniorComponents from './senior'
 
 const convertSchema = function (properties) {
   return Object.keys(properties).map(key => {
@@ -37,52 +49,31 @@ export default {
   },
   data () {
     return {
-      diySchema: Object.assign({}, this.schema, { properties: convertSchema(_.cloneDeep(this.schema.properties)) })
+      diySchema: Object.assign({}, this.schema, { properties: convertSchema(_.cloneDeep(this.schema.properties)) }),
+      dialogVisible: false,
+      currentSchema: {},
+      currentView: null
+    }
+  },
+  created () {
+    eventBus.$on('setting', (schema) => {
+      this.dialogVisible = true
+      this.currentSchema = schema
+      this.currentView = seniorComponents[schema.type]
+    })
+  },
+  methods: {
+    handleConfirm () {
+      console.log('confirm')
     }
   }
 }
 </script>
 
-// Vue.component('json-schema-editor', {
-//   props: {
-//     schema: {
-//       type: Object,
-//       default () {
-//         return {
-//           type: 'object',
-//           properties: {}
-//         }
-//       }
-//     }
-//   },
-//   data () {
-//     return {
-//       properties: convertSchema(_.cloneDeep(this.schema.properties))
-//     }
-//   },
-//   render (h) {
-//     let result = []
-//     const renderSchema = function (result, schema, level) {
-//       let properties
-//       if (schema.type === 'object') {
-//         properties = schema.properties
-//       } else if (schema.items.type === 'object') {
-//         properties = schema.items.properties
-//       }
-//       properties.forEach(property => {
-//         result.push(<Item schema={property} parentSchema={schema} level={level}></Item>)
-//         if (property.type === 'array') {
-//           let arrayItems = Object.assign({ name: 'items' }, property.items)
-//           result.push(<Item schema={arrayItems} parentSchema={property} level={level + 1}></Item>)
-//           if (property.items.type === 'object') {
-//             renderSchema(result, property, level + 2)
-//           }
-//         } else if (property.type === 'object') {
-//           renderSchema(result, property, level + 1)
-//         }
-//       })
-//     }
-//     renderSchema(result, Object.assign({}, this.schema, { properties: this.properties }), 1)
-//     return (<div>{result}</div>)
-//   }
-// })
+<style lang="less" scoped>
+  .dialog-form {
+    /deep/.el-input {
+      max-width: 300px;
+    }
+  }
+</style>

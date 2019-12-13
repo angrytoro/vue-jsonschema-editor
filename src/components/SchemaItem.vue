@@ -45,7 +45,7 @@
       </el-col>
       <el-col :span="2" class="operator-container">
         <el-tooltip effect="dark" content="高级设置" placement="top-start" :open-delay="400">
-          <el-button size="small" type="text" icon="el-icon-setting"></el-button>
+          <el-button size="small" type="text" icon="el-icon-setting" @click="handleSettingClick"></el-button>
         </el-tooltip>
         <el-tooltip v-if="showDelete" effect="dark" content="删除节点" placement="top-start" :open-delay="400">
           <el-button size="small" type="text" icon="el-icon-delete" @click="handleDelete"></el-button>
@@ -74,7 +74,7 @@
 </template>
 
 <script>
-import { SCHEMA_TYPE, PLUS_TYPE, getDefaultConfig, generateFieldName } from './utils'
+import { SCHEMA_TYPE, PLUS_TYPE, getDefaultConfig, generateFieldName, eventBus } from './utils'
 export default {
   name: 'Schema-Item',
   props: {
@@ -90,22 +90,22 @@ export default {
         return 0
       }
     },
-    showDelete: {
+    showDelete: { // 是否显示删除按钮
       type: Boolean,
       default () {
         return true
       }
     },
-    schema: {
+    schema: { // 当前schema-item的配置
       type: Object,
       default () {
         return {}
       }
     },
-    parentSchema: {
+    parentSchema: { // 父schema配置
       type: Object
     },
-    level: {
+    level: { // 层级
       type: Number,
       default () {
         return 1
@@ -261,7 +261,7 @@ export default {
      */
     handleRequiredChange (checked) {
       if (checked) {
-        this.parentSchema.required.push(this.schema)
+        this.parentSchema.required.push(this.schema.name)
       } else {
         this.parentSchema.required = this.parentSchema.required.filter(name => {
           return name !== this.schema.name
@@ -307,6 +307,9 @@ export default {
       this.parentSchema.required = this.parentSchema.required.filter(name => {
         return name !== this.schema.name
       })
+    },
+    handleSettingClick () {
+      eventBus.$emit('setting', this.schema)
     }
   }
 }
@@ -318,6 +321,6 @@ export default {
   }
   .operator-container {
     padding-left: 20px;
-    text-align: left
+    // text-align: left
   }
 </style>

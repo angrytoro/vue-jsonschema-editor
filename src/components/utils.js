@@ -1,3 +1,4 @@
+import Vue from 'vue'
 export const SCHEMA_TYPE = {
   ARRAY: 'array',
   OBJECT: 'object',
@@ -54,3 +55,5 @@ export const generateFieldName = function (brothers) {
     i++
   }
 }
+
+export const eventBus = new Vue()
